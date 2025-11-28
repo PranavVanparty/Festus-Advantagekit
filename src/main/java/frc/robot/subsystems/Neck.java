@@ -11,6 +11,15 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVPhysicsSim;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.revrobotics.SparkPIDController;
+
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.config.BaseConfig;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+
+
+
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 // import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -37,8 +46,10 @@ public class Neck extends SubsystemBase {
     // Create the Neck tilter motor and claw tilter motor
     // The constants are not corect right now, will be replaced.
 
-    private final CANSparkMax m_neckMotor = new CANSparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
+    //private final CANSparkMax m_neckMotor = new CANSparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
     // private final MotorController m_neckMotor =  m_CanSparkMaxNeck;
+    private final SparkMax m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
+
 
     private final AbsoluteEncoder m_neckEncoder;
 

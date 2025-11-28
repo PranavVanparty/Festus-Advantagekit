@@ -29,12 +29,15 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.Neck;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -53,6 +56,12 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.OIConstants;
+import frc.robot.commands.MoveNeckDown;
+import frc.robot.commands.MoveNeckUp;
+import frc.robot.commands.NeckRaiseAndShoot;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -71,6 +80,11 @@ public class RobotContainer {
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
+    private final Neck m_Neck = new Neck(); 
+
+    // The driver's controller
+    XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+    XboxController m_gunnerController = new XboxController(OIConstants.kGunnerControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -143,6 +157,8 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
+
+        
     }
 
     /**
@@ -188,6 +204,22 @@ public class RobotContainer {
                             MetersPerSecond.of(1.5),
                             Degrees.of(-60)))));
         }
+
+        //what simon added starts here
+        //Change to whileTrue after re-maping for climer
+        new JoystickButton(m_gunnerController, Button.kA.value)
+        .onTrue(new ShootAMP(m_robotShooter, m_robotIntake, m_Neck)); 
+
+        new JoystickButton(m_gunnerController, Button.kX.value)
+        // .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));     
+        .onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
+        
+        new Trigger(() -> m_gunnerController.getLeftY() < -0.5)
+        .whileTrue(new MoveNeckUp(m_Neck));
+
+        new Trigger(() -> m_gunnerController.getLeftY() > 0.5)
+        .whileTrue(new MoveNeckDown(m_Neck));
+        
     }
 
     /**
@@ -218,5 +250,7 @@ public class RobotContainer {
                 "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
         Logger.recordOutput(
                 "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+                
     }
+
 }
