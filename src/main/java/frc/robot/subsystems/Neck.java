@@ -5,18 +5,22 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.CANSparkBase.ControlType;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.REVPhysicsSim;
-import com.revrobotics.SparkAbsoluteEncoder.Type;
-import com.revrobotics.SparkPIDController;
+//import com.revrobotics.SparkAbsoluteEncoder.Type;
 
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkSim;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.config.BaseConfig;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-
-
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.sim.SparkMaxSim;
+import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.AbsoluteEncoder;
 
 
 
@@ -70,13 +74,13 @@ public class Neck extends SubsystemBase {
     // private boolean lowerLimit;
 
     private PIDController neckPIDcontroller2;
-    private SparkPIDController neckPIDcontroller1;
 
     private ShuffleboardTab m_neckTab = Shuffleboard.getTab("Neck");
     private GenericEntry m_neckAngle;
+    private SparkMaxConfig m_neckConfig = new SparkMaxConfig();
 
     public Neck() {
-        m_neckEncoder = m_neckMotor.getAbsoluteEncoder(Type.kDutyCycle);
+        m_neckEncoder = m_neckMotor.getAbsoluteEncoder();
 
         // See https://www.chiefdelphi.com/t/holding-up-a-wrist-with-a-neo/425787/14 to set these
         double endAngle = 0;
@@ -91,17 +95,17 @@ public class Neck extends SubsystemBase {
                         "max", 0.5)) // specify widget properties here
                 .getEntry();
 
-        m_neckEncoder.setPositionConversionFactor((endAngle - startAngle) / valueAtEndAngle);
+        m_neckConfig.encoder.positionConversionFactor((endAngle - startAngle) / valueAtEndAngle);
 
         if (RobotBase.isSimulation()) {
-            REVPhysicsSim.getInstance().addSparkMax(m_neckMotor, DCMotor.getNEO(1));
+            SparkSim sim = new SparkSim(m_neckMotor,DCMotor.getNEO(1));
         }
         neckPIDcontroller2 =
                 new PIDController(NeckConstants.kNeck_kP2, NeckConstants.kNeck_kI2, NeckConstants.kNeck_kD2);
-        neckPIDcontroller1 = m_neckMotor.getPIDController();
-        neckPIDcontroller1.setP(NeckConstants.kNeck_kP);
-        neckPIDcontroller1.setP(NeckConstants.kNeck_kI);
-        neckPIDcontroller1.setP(NeckConstants.kNeck_kD);
+    
+        m_neckConfig.closedLoop
+            .pid(NeckConstants.kNeck_kP, NeckConstants.kNeck_kI, NeckConstants.kNeck_kD);
+        m_neckMotor.configure(m_neckConfig,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
     }
 
     @Override
@@ -142,8 +146,8 @@ public class Neck extends SubsystemBase {
     }
 
     public void moveTo(Rotation2d target) {
-        neckPIDcontroller1.setReference(
-                target.getRadians(), ControlType.kPosition, 0, armFeedforward.calculate(target.getRadians(), 0));
+        SparkClosedLoopController neckController = m_neckMotor.getClosedLoopController();
+        neckController.setReference(target.getRotations(), ControlType.kPosition);
     }
 
     public void moveTo(double target) {
