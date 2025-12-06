@@ -26,8 +26,8 @@ public final class Constants {
     public static final class OIConstants {
         public static final int kDriverControllerPort = 0;
         public static final int kGunnerControllerPort = 1;
+    }
 
-      }
     public static enum Mode {
         /** Running on a real robot. */
         REAL,
@@ -48,10 +48,10 @@ public final class Constants {
         public static final double kNeckForwardMaxSpeed = 0.15;
         public static final double kNeckReverseMaxSpeed = -0.15;
         public static final double kNeckStableSpeed = 0.058;
-    
+
         // TODO tune
         public static final double kNeckSlowModifier = 0.57;
-    
+
         // NOT UPDATED TO 2024 NECK VALUES
         public static final double kEncoderUpperThreshold = 0.30;
         public static final double kEncoderLowerThreshold = 0.01;
@@ -62,18 +62,17 @@ public final class Constants {
         public static final double kNeckMidAngle = 0.37; // good
         public static final double kNeckLowAngle = 0.70;
         public static final double kLoadingStation = 0.36;
-    
+
         // Controller constants
         public static final double kNeck_kS = 1.7;
         public static final double kNeck_kG = 0.5;
         public static final double kNeck_kV = 0.0;
-    
+
         public static final double kNeck_kP = 0.0;
         public static final double kNeck_kI = 0.0;
         public static final double kNeck_kD = 0.0;
         public static final double kNeck_kP2 = 1;
         public static final double kNeck_kI2 = 0;
         public static final double kNeck_kD2 = 0;
-    
-      }
+    }
 }

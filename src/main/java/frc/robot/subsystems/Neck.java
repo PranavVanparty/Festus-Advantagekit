@@ -5,30 +5,18 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
-//import com.revrobotics.SparkAbsoluteEncoder.Type;
-
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkSim;
+// import com.revrobotics.SparkAbsoluteEncoder.Type;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.config.BaseConfig;
-
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.AbsoluteEncoder;
-
-
-
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 // import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.GenericEntry;
 // import edu.wpi.first.wpilibj.DigitalInput;
 // import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -50,10 +38,9 @@ public class Neck extends SubsystemBase {
     // Create the Neck tilter motor and claw tilter motor
     // The constants are not corect right now, will be replaced.
 
-    //private final CANSparkMax m_neckMotor = new CANSparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
+    // private final CANSparkMax m_neckMotor = new CANSparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
     // private final MotorController m_neckMotor =  m_CanSparkMaxNeck;
     private final SparkMax m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
-
 
     private final AbsoluteEncoder m_neckEncoder;
 
@@ -98,14 +85,13 @@ public class Neck extends SubsystemBase {
         m_neckConfig.encoder.positionConversionFactor((endAngle - startAngle) / valueAtEndAngle);
 
         if (RobotBase.isSimulation()) {
-            SparkSim sim = new SparkSim(m_neckMotor,DCMotor.getNEO(1));
+            // SparkSim sim = new SparkSim(m_neckMotor, DCMotor.getNEO(1));
         }
         neckPIDcontroller2 =
                 new PIDController(NeckConstants.kNeck_kP2, NeckConstants.kNeck_kI2, NeckConstants.kNeck_kD2);
-    
-        m_neckConfig.closedLoop
-            .pid(NeckConstants.kNeck_kP, NeckConstants.kNeck_kI, NeckConstants.kNeck_kD);
-        m_neckMotor.configure(m_neckConfig,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
+
+        m_neckConfig.closedLoop.pid(NeckConstants.kNeck_kP, NeckConstants.kNeck_kI, NeckConstants.kNeck_kD);
+        m_neckMotor.configure(m_neckConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
