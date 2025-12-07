@@ -10,34 +10,34 @@ import frc.robot.Constants.NeckConstants;
 import frc.robot.subsystems.Neck;
 
 public class MoveNeckDown extends Command {
-  private final Neck m_Neck;
+    private final Neck m_Neck;
 
-  public MoveNeckDown(Neck theNeck) {
-    m_Neck = theNeck;
-    addRequirements(m_Neck);
-  }
+    public MoveNeckDown(Neck theNeck) {
+        m_Neck = theNeck;
+        addRequirements(m_Neck);
+    }
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {}
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {}
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    //m_Neck.getMotorController().set(NeckConstants.kNeckReverseSpeed);
-    m_Neck.move(NeckConstants.kNeckReverseSpeed);
-    SmartDashboard.putString("RunningArm:", "Down");
-  }
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {
+        // m_Neck.getMotorController().set(NeckConstants.kNeckReverseSpeed);
+        m_Neck.move(NeckConstants.kNeckReverseSpeed);
+        SmartDashboard.putString("RunningArm:", "Down");
+    }
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    m_Neck.stop();
-  }
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
+        m_Neck.stop();
+    }
 
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return m_Neck.AtMinHeight();
-  }
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+        return m_Neck.AtMinHeight();
+    }
 }
