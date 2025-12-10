@@ -199,7 +199,7 @@ public class RobotContainer {
                             Degrees.of(-60)))));
         }
 
-        m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(gunner.getLeftY())));
+        m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(-gunner.getLeftY()), m_Neck));
         // what simon added starts here
         // Change to whileTrue after re-maping for climer
         //         new JoystickButton(m_gunnerController, Button.kA.value)

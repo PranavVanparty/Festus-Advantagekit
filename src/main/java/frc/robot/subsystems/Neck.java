@@ -70,9 +70,9 @@ public class Neck extends SubsystemBase {
         m_neckEncoder = m_neckMotor.getAbsoluteEncoder();
 
         // See https://www.chiefdelphi.com/t/holding-up-a-wrist-with-a-neo/425787/14 to set these
-        double endAngle = 0;
-        double startAngle = 0;
-        double valueAtEndAngle = 0;
+        // double endAngle = 0;
+        // double startAngle = 0;
+        // double valueAtEndAngle = 0;
 
         m_neckAngle = m_neckTab
                 .add("Max Speed", 0.01)
@@ -82,7 +82,7 @@ public class Neck extends SubsystemBase {
                         "max", 0.5)) // specify widget properties here
                 .getEntry();
 
-        m_neckConfig.encoder.positionConversionFactor((endAngle - startAngle) / valueAtEndAngle);
+        // m_neckConfig.encoder.positionConversionFactor((endAngle - startAngle) / valueAtEndAngle);
 
         if (RobotBase.isSimulation()) {
             // SparkSim sim = new SparkSim(m_neckMotor, DCMotor.getNEO(1));
