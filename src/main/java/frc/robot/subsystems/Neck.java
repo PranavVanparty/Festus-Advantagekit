@@ -96,13 +96,7 @@ public class Neck extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-        NeckPosition = m_neckEncoder.getPosition();
-        // lowerLimit = m_lowerLimitSwitch.get();
-
-        SmartDashboard.putNumber("Neck Encoder:", NeckPosition);
-        SmartDashboard.putNumber("Neck motor speed", m_neckMotor.get());
-        // SmartDashboard.putBoolean("Neck limit: ", m_lowerLimitSwitch.get());
+        SmartDashboard.putNumber("Neck Encoder:", m_neckEncoder.getPosition());
     }
 
     public boolean AtMaxHeight() {
@@ -114,9 +108,7 @@ public class Neck extends SubsystemBase {
     }
 
     public double getNeckAngle() {
-        double angle = m_neckEncoder.getPosition();
-        if (angle > 0.9) angle = 0;
-        return angle;
+        return m_neckEncoder.getPosition();
     }
 
     public AbsoluteEncoder getNeckEncoder() {
@@ -144,5 +136,3 @@ public class Neck extends SubsystemBase {
         return m_neckAngle.getDouble(0.0);
     }
 }
-
-// clean up; get only required/general functions

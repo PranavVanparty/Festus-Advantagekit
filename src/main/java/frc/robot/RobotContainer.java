@@ -21,7 +21,14 @@ import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,15 +37,20 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.MoveNeck;
+import frc.robot.commands.NeckRaiseAndShoot;
+import frc.robot.commands.NeckStable;
 import frc.robot.subsystems.Neck;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -53,11 +65,8 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.util.GCLimelight;
+import frc.robot.subsystems.RangeFinder;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -78,6 +87,8 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
     private final Neck m_Neck = new Neck();
+    private final GCLimelight m_Vision = new GCLimelight("limelight-gcc");
+    private final RangeFinder m_Range = new RangeFinder();
 
     // The driver's controller
     XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -166,6 +177,8 @@ public class RobotContainer {
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
 
+        m_Neck.setDefaultCommand(new NeckStable(m_Neck));
+
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
                 ? () -> drive.resetOdometry(
@@ -206,9 +219,17 @@ public class RobotContainer {
         new Trigger(() -> m_gunnerController.getLeftY() != 0)
                 .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
 
-        //         new JoystickButton(m_gunnerController, Button.kX.value)
-        //                 // .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
-        //                 .onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
+                // Test the neck raise to range
+        new JoystickButton(m_gunnerController, Button.kX.value)
+                .onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
+
+                // Test the limelight face april tag code
+        new JoystickButton(m_driverController, Button.kA.value)
+                .whileTrue(new FaceAprilTag(m_Vision, drive));
+
+
+                        //  .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
+                         //.onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
 
         //         new Trigger(() -> m_gunnerController.getLeftY() < -0.5).whileTrue(new MoveNeckUp(m_Neck));
 
