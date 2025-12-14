@@ -1,9 +1,8 @@
 package frc.robot.subsystems.neck;
 
-import org.littletonrobotics.junction.AutoLog;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.encoder.EncoderIO;
+import org.littletonrobotics.junction.AutoLog;
 
 public interface NeckIO {
     @AutoLog
@@ -30,5 +29,6 @@ public interface NeckIO {
 
     public default void stop() {}
 
-    public void updateInputs(NeckIOInputs inputs);
+    public default void updateInputs(NeckIOInputs inputs) {}
+    ;
 }

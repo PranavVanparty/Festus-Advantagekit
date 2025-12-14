@@ -4,7 +4,6 @@ import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -24,28 +23,22 @@ public class NeckIOSim implements NeckIO {
     private static final double LOOP_PERIOD_SECS = 0.02;
 
     public NeckIOSim() {
-        neckSim =
-            new SingleJointedArmSim(
+        neckSim = new SingleJointedArmSim(
                 DCMotor.getNEO(1),
                 /* gearing */ 100.0,
-                /* moi (kg*m^2) */ SingleJointedArmSim
-                                        .estimateMOI(
-                                            Units.inchesToMeters(NeckConstants.kNeck_Length),
-                                            Units.lbsToKilograms(NeckConstants.kNeck_Mass)),
+                /* moi (kg*m^2) */ SingleJointedArmSim.estimateMOI(
+                        Units.inchesToMeters(NeckConstants.kNeck_Length),
+                        Units.lbsToKilograms(NeckConstants.kNeck_Mass)),
                 /* arm length (m) */ NeckConstants.kNeck_Length,
                 /* min angle (rad) */ -0.42,
                 /* max angle (rad) */ Math.PI / 2.0,
                 /* simulate gravity */ true,
-                /* starting angle (rad) */ -0.42
-            );
+                /* starting angle (rad) */ -0.42);
 
         m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
 
-        
         sim = new SparkMaxSim(m_neckMotor, DCMotor.getNEO(1));
         encoderSim = new SparkEncoderIOSim(sim.getAbsoluteEncoderSim());
-
-        
     }
 
     @Override
