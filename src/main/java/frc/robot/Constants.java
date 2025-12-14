@@ -74,5 +74,8 @@ public final class Constants {
         public static final double kNeck_kP2 = 1.5;
         public static final double kNeck_kI2 = 0;
         public static final double kNeck_kD2 = 0;
+
+        public static final double kNeck_Mass = 12.06; // kg
+        public static final double kNeck_Length = 0.66; // meters
     }
 }

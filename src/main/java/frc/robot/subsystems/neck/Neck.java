@@ -4,6 +4,8 @@
 // EDIT PORTS; create code!
 package frc.robot.subsystems.neck;
 
+import java.util.Map;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -12,7 +14,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.encoder.EncoderIO;
-import java.util.Map;
+import frc.robot.subsystems.neck.NeckIO.NeckIOInputs;
 
 public class Neck extends SubsystemBase {
     /** Creates a new Neck. */
@@ -22,6 +24,7 @@ public class Neck extends SubsystemBase {
 
     private final ShuffleboardTab m_neckTab = Shuffleboard.getTab("Neck");
     private final GenericEntry m_neckAngle;
+    private NeckIOInputs m_neckInputs = new NeckIOInputs();
 
     public Neck(NeckIO io) {
         this.io = io;
@@ -38,6 +41,7 @@ public class Neck extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Neck Encoder:", io.getNeckEncoder().getPosition());
+        io.updateInputs(m_neckInputs);
     }
 
     public boolean AtMaxHeight() {

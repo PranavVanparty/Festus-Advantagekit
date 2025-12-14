@@ -7,9 +7,11 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants.NeckConstants;
 import frc.robot.subsystems.encoder.EncoderIO;
 import frc.robot.subsystems.encoder.SparkEncoderIO;
@@ -73,5 +75,21 @@ public class NeckIOSpark implements NeckIO {
     @Override
     public void stop() {
         m_neckMotor.set(0);
+    }
+
+    @Override
+    public void updateInputs(NeckIOInputs inputs) {
+        if (!DriverStation.isEnabled()) return;
+        // Get the current neck angle (encoder position)
+        inputs.neckAngle = m_neckEncoder.getPosition();
+
+        // Get the current neck velocity (encoder velocity)
+        inputs.neckVelocity = m_neckEncoder.getVelocityRotationsPerSec();
+
+        // Get the applied voltage from the motor
+        inputs.neckAppliedVolts = m_neckMotor.getAppliedOutput() * m_neckMotor.getBusVoltage();
+
+        // Get the current draw from the motor
+        inputs.neckCurrentAmps = m_neckMotor.getOutputCurrent();
     }
 }
