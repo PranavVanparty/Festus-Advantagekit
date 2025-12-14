@@ -1,13 +1,12 @@
 package frc.robot.subsystems.neck;
 
-import com.revrobotics.AbsoluteEncoder;
-
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.encoder.EncoderIO;
 
 public interface NeckIO {
     public default double getNeckAngle() { return 0.0; }
 
-    public default AbsoluteEncoder getNeckEncoder() { return null; }
+    default EncoderIO getNeckEncoder() { return null; }
 
     public default void move(double speed) {}
 

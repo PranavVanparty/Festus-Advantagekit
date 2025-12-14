@@ -1,6 +1,5 @@
 package frc.robot.subsystems.neck;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -8,15 +7,18 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.Constants.NeckConstants;
+import frc.robot.subsystems.encoder.EncoderIO;
+import frc.robot.subsystems.encoder.SparkEncoderIO;
 
 @SuppressWarnings({"unused", "FieldMayBeFinal"})
 public class NeckIOSpark implements NeckIO {
     private final SparkMax m_neckMotor;
-    private final AbsoluteEncoder m_neckEncoder;
+    private final EncoderIO m_neckEncoder;
     private ArmFeedforward armFeedforward;
     private PIDController neckPIDcontroller2;
     private SparkMaxConfig m_neckConfig;
@@ -24,7 +26,7 @@ public class NeckIOSpark implements NeckIO {
 
     public NeckIOSpark() {
         m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
-        m_neckEncoder = m_neckMotor.getAbsoluteEncoder();
+        m_neckEncoder = new SparkEncoderIO(m_neckMotor.getAbsoluteEncoder());
         m_neckConfig = new SparkMaxConfig();
         armFeedforward = new ArmFeedforward(NeckConstants.kNeck_kS, NeckConstants.kNeck_kG, NeckConstants.kNeck_kV);
         neckController = m_neckMotor.getClosedLoopController();
@@ -50,8 +52,7 @@ public class NeckIOSpark implements NeckIO {
     }
 
     @Override
-    public AbsoluteEncoder getNeckEncoder() {
-
+    public EncoderIO getNeckEncoder() {
         return m_neckEncoder;
     }
 

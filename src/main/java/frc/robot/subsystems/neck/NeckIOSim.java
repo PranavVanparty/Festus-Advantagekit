@@ -1,27 +1,32 @@
 package frc.robot.subsystems.neck;
 
-import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.sim.SparkAbsoluteEncoderSim;
+import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkSim;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants.NeckConstants;
+import frc.robot.subsystems.encoder.EncoderIO;
+import frc.robot.subsystems.encoder.SparkEncoderIOSim;
 
 @SuppressWarnings({"unused", "FieldMayBeFinal"})
 public class NeckIOSim implements NeckIO {
     private final SparkMax m_neckMotor;
-    SparkSim sim;
+    SparkMaxSim sim;
+    SparkEncoderIOSim encoderSim;
 
     public NeckIOSim() {
         m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
-        sim = new SparkSim(m_neckMotor, DCMotor.getNEO(1));
+        
+        sim = new SparkMaxSim(m_neckMotor, DCMotor.getNEO(1));
+        encoderSim = new SparkEncoderIOSim(sim.getAbsoluteEncoderSim());
     }
 
     @Override
     public double getNeckAngle() {
-        return sim.getPosition();
+        return encoderSim.getPosition();
     }
 
     @Override
@@ -36,8 +41,8 @@ public class NeckIOSim implements NeckIO {
     public void moveTo(double target) {}
 
     @Override
-    public AbsoluteEncoder getNeckEncoder() {
-        return null;
+    public EncoderIO getNeckEncoder() {
+        return encoderSim;
     }
 
     @Override

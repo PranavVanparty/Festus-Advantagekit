@@ -4,7 +4,8 @@
 // EDIT PORTS; create code!
 package frc.robot.subsystems.neck;
 
-import com.revrobotics.AbsoluteEncoder;
+import java.util.Map;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -12,7 +13,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.Map;
+import frc.robot.subsystems.encoder.EncoderIO;
 
 public class Neck extends SubsystemBase {
     /** Creates a new Neck. */
@@ -52,7 +53,7 @@ public class Neck extends SubsystemBase {
         return io.getNeckAngle();
     }
 
-    public AbsoluteEncoder getNeckEncoder() {
+    public EncoderIO getNeckEncoder() {
         return io.getNeckEncoder();
     }
 
