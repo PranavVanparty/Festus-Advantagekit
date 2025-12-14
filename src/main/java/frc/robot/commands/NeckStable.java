@@ -8,7 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.NeckConstants;
-import frc.robot.subsystems.Neck;
+import frc.robot.subsystems.neck.Neck;
 
 public class NeckStable extends Command {
     /** Creates a new NeckStable. */

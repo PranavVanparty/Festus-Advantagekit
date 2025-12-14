@@ -13,16 +13,11 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
-
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -34,8 +29,10 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,7 +48,7 @@ import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.MoveNeck;
 import frc.robot.commands.NeckRaiseAndShoot;
 import frc.robot.commands.NeckStable;
-import frc.robot.subsystems.Neck;
+import frc.robot.subsystems.RangeFinder;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -60,13 +57,20 @@ import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSpark;
+import frc.robot.subsystems.neck.Neck;
+import frc.robot.subsystems.neck.NeckIO;
+import frc.robot.subsystems.neck.NeckIOSim;
+import frc.robot.subsystems.neck.NeckIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.GCLimelight;
-import frc.robot.subsystems.RangeFinder;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -86,7 +90,7 @@ public class RobotContainer {
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
-    private final Neck m_Neck = new Neck();
+    private final Neck m_Neck;
     private final GCLimelight m_Vision = new GCLimelight("limelight-gcc");
     private final RangeFinder m_Range = new RangeFinder();
 
@@ -112,9 +116,12 @@ public class RobotContainer {
                         new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
                         new VisionIOLimelight(VisionConstants.camera1Name, drive::getRotation));
 
+                m_Neck = new Neck(new NeckIOSpark());
                 break;
             case SIM:
                 // create a maple-sim swerve drive simulation instance
+
+                SimulatedArena.overrideInstance(new Arena2024Crescendo()); // * set the field to Crescendo 2024
                 this.driveSimulation =
                         new SwerveDriveSimulation(DriveConstants.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
                 // add the simulated drivetrain to the simulation field
@@ -135,6 +142,7 @@ public class RobotContainer {
                         new VisionIOPhotonVisionSim(
                                 camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
 
+                m_Neck = new Neck(new NeckIOSim());
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -146,7 +154,7 @@ public class RobotContainer {
                         new ModuleIO() {},
                         (pose) -> {});
                 vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
-
+                m_Neck = new Neck(new NeckIO() {});
                 break;
         }
 
@@ -175,7 +183,10 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
+                drive,
+                (Math.abs(pranav.getLeftY()) > 0.03) ? () -> 0 : () -> pranav.getLeftY(),
+                (Math.abs(pranav.getLeftX()) > 0.03) ? () -> 0 : () -> pranav.getLeftX(),
+                (Math.abs(pranav.getRightX()) > 1) ? () -> 0 : () -> -pranav.getRightX()));
 
         m_Neck.setDefaultCommand(new NeckStable(m_Neck));
 
@@ -211,6 +222,20 @@ public class RobotContainer {
                             Meters.of(1.35),
                             MetersPerSecond.of(1.5),
                             Degrees.of(-60)))));
+            // * create note on field
+            pranav.L1().onTrue(Commands.runOnce((() -> {
+                SimulatedArena.getInstance()
+                        .addGamePieceProjectile(new NoteOnFly(
+                                driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                                new Translation2d(0.12, 0),
+                                driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                                driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                                Meters.of(0.413),
+                                MetersPerSecond.of(10),
+                                Degrees.of(59.6)));
+            })));
+            pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
+                    .addGamePiece(new CrescendoNoteOnField(new Translation2d(3, 3)))));
         }
 
         // m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(-gunner.getLeftY()), m_Neck));
@@ -219,17 +244,15 @@ public class RobotContainer {
         new Trigger(() -> m_gunnerController.getLeftY() != 0)
                 .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
 
-                // Test the neck raise to range
+        // Test the neck raise to range
         new JoystickButton(m_gunnerController, Button.kX.value)
                 .onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
 
-                // Test the limelight face april tag code
-        new JoystickButton(m_driverController, Button.kA.value)
-                .whileTrue(new FaceAprilTag(m_Vision, drive));
+        // Test the limelight face april tag code
+        new JoystickButton(m_driverController, Button.kA.value).whileTrue(new FaceAprilTag(m_Vision, drive));
 
-
-                        //  .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
-                         //.onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
+        //  .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
+        // .onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
 
         //         new Trigger(() -> m_gunnerController.getLeftY() < -0.5).whileTrue(new MoveNeckUp(m_Neck));
 
@@ -257,12 +280,14 @@ public class RobotContainer {
         SimulatedArena.getInstance().simulationPeriodic();
         Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
+        Logger.recordOutput("finalComponentPoses", new Pose3d[] {
+            new Pose3d(-0.33, 0, 0.43, new Rotation3d(0, 0, 0)) // Math.sin(Timer.getTimestamp()), 0))
+        });
+        // Logger.recordOutput(
+        //         "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        // Logger.recordOutput(
+        //         "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
         Logger.recordOutput(
-                "finalComponentPoses",
-                new Pose3d[] {new Pose3d(-0.33, 0, 0.43, new Rotation3d(0, Math.sin(Timer.getTimestamp()), 0))});
-        Logger.recordOutput(
-                "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-        Logger.recordOutput(
-                "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+                "FieldSimulation/Notes", SimulatedArena.getInstance().getGamePiecesArrayByType("Note"));
     }
 }
