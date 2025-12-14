@@ -1,13 +1,10 @@
 package frc.robot.subsystems.encoder;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-
 /**
  * IO layer for the neck encoder.
  *
- * Concrete implementations should wrap either:
- *  - real hardware (SparkAbsoluteEncoder), or
- *  - simulation (SparkAbsoluteEncoderSim / custom sim).
+ * <p>Concrete implementations should wrap either: - real hardware (SparkAbsoluteEncoder), or - simulation
+ * (SparkAbsoluteEncoderSim / custom sim).
  */
 public interface EncoderIO {
 
@@ -25,14 +22,13 @@ public interface EncoderIO {
     // -------- Sim-related hooks (for SparkAbsoluteEncoderSim) --------
 
     /**
-     * For simulation: directly set simulated position in rotations.
-     * Real implementations may ignore or throw if called.
+     * For simulation: directly set simulated position in rotations. Real implementations may ignore or throw if called.
      */
     public default void setSimPositionRotations(double positionRotations) {}
 
     /**
-     * For simulation: directly set simulated velocity in rotations per second.
-     * Real implementations may ignore or throw if called.
+     * For simulation: directly set simulated velocity in rotations per second. Real implementations may ignore or throw
+     * if called.
      */
     public default void setSimVelocityRotationsPerSec(double velocityRotationsPerSec) {}
 }

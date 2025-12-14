@@ -1,10 +1,8 @@
 package frc.robot.subsystems.neck;
 
-import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.Constants.NeckConstants;
@@ -19,7 +17,7 @@ public class NeckIOSim implements NeckIO {
 
     public NeckIOSim() {
         m_neckMotor = new SparkMax(NeckConstants.kNeckMotorPort, MotorType.kBrushless);
-        
+
         sim = new SparkMaxSim(m_neckMotor, DCMotor.getNEO(1));
         encoderSim = new SparkEncoderIOSim(sim.getAbsoluteEncoderSim());
     }

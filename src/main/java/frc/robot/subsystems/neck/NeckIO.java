@@ -4,9 +4,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.encoder.EncoderIO;
 
 public interface NeckIO {
-    public default double getNeckAngle() { return 0.0; }
+    public default double getNeckAngle() {
+        return 0.0;
+    }
 
-    default EncoderIO getNeckEncoder() { return null; }
+    default EncoderIO getNeckEncoder() {
+        return null;
+    }
 
     public default void move(double speed) {}
 

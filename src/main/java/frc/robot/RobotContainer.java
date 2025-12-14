@@ -13,25 +13,20 @@
 
 package frc.robot;
 
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -45,9 +40,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FaceAprilTag;
-import frc.robot.commands.MoveNeck;
-import frc.robot.commands.NeckRaiseAndShoot;
-import frc.robot.commands.NeckStable;
+import frc.robot.commands.neckCommands.MoveNeck;
+import frc.robot.commands.neckCommands.NeckRaiseAndShoot;
+import frc.robot.commands.neckCommands.NeckStable;
 import frc.robot.subsystems.RangeFinder;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -63,14 +58,17 @@ import frc.robot.subsystems.neck.NeckIOSim;
 import frc.robot.subsystems.neck.NeckIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.GCLimelight;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -86,7 +84,7 @@ public class RobotContainer {
     // Controller
     private final CommandXboxController driver = new CommandXboxController(0);
     private final CommandXboxController gunner = new CommandXboxController(1);
-    private final CommandPS4Controller pranav = new CommandPS4Controller(0);
+    private final CommandPS4Controller pranav = new CommandPS4Controller(2);
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -182,11 +180,17 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
+        // drive.setDefaultCommand(DriveCommands.joystickDrive(
+        //         drive,
+        //         (Math.abs(pranav.getLeftY()) > 0.03) ? () -> 0 : () -> pranav.getLeftY(),
+        //         (Math.abs(pranav.getLeftX()) > 0.03) ? () -> 0 : () -> pranav.getLeftX(),
+        //         (Math.abs(pranav.getRightX()) > 1) ? () -> 0 : () -> -pranav.getRightX()));
+
         drive.setDefaultCommand(DriveCommands.joystickDrive(
                 drive,
-                (Math.abs(pranav.getLeftY()) > 0.03) ? () -> 0 : () -> pranav.getLeftY(),
-                (Math.abs(pranav.getLeftX()) > 0.03) ? () -> 0 : () -> pranav.getLeftX(),
-                (Math.abs(pranav.getRightX()) > 1) ? () -> 0 : () -> -pranav.getRightX()));
+                (Math.abs(driver.getLeftY()) > 0.03) ? () -> 0 : () -> driver.getLeftY(),
+                (Math.abs(driver.getLeftX()) > 0.03) ? () -> 0 : () -> driver.getLeftX(),
+                (Math.abs(driver.getRightX()) > 1) ? () -> 0 : () -> -driver.getRightX()));
 
         m_Neck.setDefaultCommand(new NeckStable(m_Neck));
 
@@ -199,30 +203,8 @@ public class RobotContainer {
                         new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
-        // Example Coral Placement Code
-        // TODO: delete these code for your own project
         if (Constants.currentMode == Constants.Mode.SIM) {
-            // L4 placement
-            pranav.triangle().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
-                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                            new Translation2d(0.4, 0),
-                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                            Meters.of(2),
-                            MetersPerSecond.of(1.5),
-                            Degrees.of(-80)))));
-            // L3 placement
-            pranav.circle().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
-                    .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                            driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
-                            new Translation2d(0.4, 0),
-                            driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                            driveSimulation.getSimulatedDriveTrainPose().getRotation(),
-                            Meters.of(1.35),
-                            MetersPerSecond.of(1.5),
-                            Degrees.of(-60)))));
-            // * create note on field
+            // * Shoots note from shooter
             pranav.L1().onTrue(Commands.runOnce((() -> {
                 SimulatedArena.getInstance()
                         .addGamePieceProjectile(new NoteOnFly(
@@ -234,12 +216,10 @@ public class RobotContainer {
                                 MetersPerSecond.of(10),
                                 Degrees.of(59.6)));
             })));
+            // * create note on field
             pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
                     .addGamePiece(new CrescendoNoteOnField(new Translation2d(3, 3)))));
         }
-
-        // m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(-gunner.getLeftY()), m_Neck));
-        // what simon added starts here
         // Change to whileTrue after re-maping for climer
         new Trigger(() -> m_gunnerController.getLeftY() != 0)
                 .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
@@ -250,6 +230,15 @@ public class RobotContainer {
 
         // Test the limelight face april tag code
         new JoystickButton(m_driverController, Button.kA.value).whileTrue(new FaceAprilTag(m_Vision, drive));
+
+        // * PRANAV's Controller Bindings for Neck and Vision Testing
+        new Trigger(() -> pranav.getLeftY() != 0).whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
+
+        // Test the neck raise to range
+        pranav.square().onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
+
+        // Test the limelight face april tag code
+        pranav.cross().whileTrue(new FaceAprilTag(m_Vision, drive));
 
         //  .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
         // .onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));
@@ -281,7 +270,8 @@ public class RobotContainer {
         Logger.recordOutput("FieldSimulation/RobotPosition", driveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
         Logger.recordOutput("finalComponentPoses", new Pose3d[] {
-            new Pose3d(-0.33, 0, 0.43, new Rotation3d(0, 0, 0)) // Math.sin(Timer.getTimestamp()), 0))
+            new Pose3d(
+                    -0.33, 0, 0.43, new Rotation3d(0, 0, m_Neck.getNeckAngle())) // Math.sin(Timer.getTimestamp()), 0))
         });
         // Logger.recordOutput(
         //         "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
