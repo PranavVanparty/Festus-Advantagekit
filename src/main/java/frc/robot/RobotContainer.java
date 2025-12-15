@@ -206,6 +206,7 @@ public class RobotContainer {
                         new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
 
+        // TODO: get the angle of the note while the arm is moving
         if (Constants.currentMode == Constants.Mode.SIM) {
             // * Shoots note from shooter
             pranav.L1().onTrue(Commands.runOnce((() -> {
