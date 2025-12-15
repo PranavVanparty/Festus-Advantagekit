@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.encoder.EncoderIO;
-import frc.robot.subsystems.neck.NeckIO.NeckIOInputs;
 import java.util.Map;
+import org.littletonrobotics.junction.Logger;
 
 public class Neck extends SubsystemBase {
     /** Creates a new Neck. */
@@ -23,11 +23,10 @@ public class Neck extends SubsystemBase {
 
     private final ShuffleboardTab m_neckTab = Shuffleboard.getTab("Neck");
     private final GenericEntry m_neckAngle;
-    private NeckIOInputs m_neckInputs = new NeckIOInputs();
+    private NeckIOInputsAutoLogged m_neckInputs = new NeckIOInputsAutoLogged();
 
     public Neck(NeckIO io) {
         this.io = io;
-
         m_neckAngle = m_neckTab
                 .add("Max Speed", 0.01)
                 .withWidget(BuiltInWidgets.kNumberSlider) // specify the widget here
@@ -39,8 +38,9 @@ public class Neck extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Neck Encoder:", io.getNeckEncoder().getPosition());
         io.updateInputs(m_neckInputs);
+        Logger.processInputs("Neck", m_neckInputs);
+        SmartDashboard.putNumber("Neck Encoder:", getNeckAngle());
     }
 
     public boolean AtMaxHeight() {
