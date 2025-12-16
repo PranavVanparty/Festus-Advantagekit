@@ -13,25 +13,21 @@
 
 package frc.robot;
 
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -41,12 +37,10 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FaceAprilTag;
-import frc.robot.commands.neckCommands.MoveNeck;
 import frc.robot.commands.neckCommands.NeckRaiseAndShoot;
 import frc.robot.commands.neckCommands.NeckStable;
 import frc.robot.subsystems.RangeFinder;
@@ -64,14 +58,17 @@ import frc.robot.subsystems.neck.NeckIOSim;
 import frc.robot.subsystems.neck.NeckIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.GCLimelight;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.Arena2024Crescendo;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.NoteOnFly;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -218,7 +215,8 @@ public class RobotContainer {
                                 driveSimulation.getSimulatedDriveTrainPose().getRotation(),
                                 Meters.of(0.413),
                                 MetersPerSecond.of(10),
-                                Degrees.of(59.6)));
+                                Degrees.of(((m_Neck.getNeckAngle() * 180) / (Math.PI))
+                                        + 59.6))); // ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6
             })));
             // * create note on field
             pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
@@ -226,8 +224,8 @@ public class RobotContainer {
         }
 
         // Change to whileTrue after re-maping for climer
-        new Trigger(() -> m_gunnerController.getLeftY() != 0)
-                .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
+        // new Trigger(() -> pranav.getRightY() != 0).whileTrue(new MoveNeck(m_Neck, () ->
+        // -m_gunnerController.getRightY()));
 
         // Test the neck raise to range
         new JoystickButton(m_gunnerController, Button.kX.value)
@@ -248,9 +246,9 @@ public class RobotContainer {
         //         )
         //         );
 
-        pranav.triangle().onTrue(Commands.run(() -> m_Neck.move(10)));
-
-        pranav.share().onTrue(new RunCommand(() -> System.out.println(".()")));
+        pranav.triangle().whileTrue(Commands.run(() -> m_Neck.move(1)));
+        pranav.circle().whileTrue(Commands.run(() -> m_Neck.move(-1)));
+        pranav.share().whileTrue(new RunCommand(() -> System.out.println(".()")));
         // Test the neck raise to range
         pranav.square().onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
 
