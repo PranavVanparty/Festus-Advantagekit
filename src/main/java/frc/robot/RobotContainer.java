@@ -206,7 +206,14 @@ public class RobotContainer {
         // TODO: get the angle of the note while the arm is moving
         if (Constants.currentMode == Constants.Mode.SIM) {
             // * Shoots note from shooter
+
             pranav.L1().onTrue(Commands.runOnce((() -> {
+                double firingAngle = ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6;
+                if (firingAngle < 0) {
+                    firingAngle = Math.abs(firingAngle);
+                } else {
+                    firingAngle = 360 - firingAngle;
+                }
                 SimulatedArena.getInstance()
                         .addGamePieceProjectile(new NoteOnFly(
                                 driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
@@ -215,10 +222,10 @@ public class RobotContainer {
                                 driveSimulation.getSimulatedDriveTrainPose().getRotation(),
                                 Meters.of(0.413),
                                 MetersPerSecond.of(10),
-                                Degrees.of(((m_Neck.getNeckAngle() * 180) / (Math.PI))
-                                        + 59.6))); // ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6
+                                Degrees.of(firingAngle))); // ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6
             })));
             // * create note on field
+            // absolute value when less than/equal to 0 and 360 - angle when greater than to 0
             pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
                     .addGamePiece(new CrescendoNoteOnField(new Translation2d(3, 3)))));
         }
