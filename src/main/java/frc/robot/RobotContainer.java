@@ -32,13 +32,16 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeNote;
+import frc.robot.commands.ShootNote;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Neck;
+import frc.robot.subsystems.Outtake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -77,6 +80,8 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
     private final Neck m_Neck = new Neck();
+    private final Intake m_Intake = new Intake();
+    private final Outtake m_Outtake = new Outtake();
 
     // The driver's controller
     XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -198,8 +203,6 @@ public class RobotContainer {
                             MetersPerSecond.of(1.5),
                             Degrees.of(-60)))));
         }
-
-        m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(-gunner.getLeftY()), m_Neck));
         // what simon added starts here
         // Change to whileTrue after re-maping for climer
         //         new JoystickButton(m_gunnerController, Button.kA.value)
@@ -212,6 +215,9 @@ public class RobotContainer {
         //         new Trigger(() -> m_gunnerController.getLeftY() < -0.5).whileTrue(new MoveNeckUp(m_Neck));
 
         //         new Trigger(() -> m_gunnerController.getLeftY() > 0.5).whileTrue(new MoveNeckDown(m_Neck));
+
+        gunner.leftBumper().whileTrue(new ShootNote(m_Outtake, 0.5));
+        gunner.rightBumper().whileTrue(new IntakeNote(m_Intake, 0.5));
     }
 
     /**
