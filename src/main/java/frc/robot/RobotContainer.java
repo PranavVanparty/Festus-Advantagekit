@@ -215,8 +215,9 @@ public class RobotContainer {
                                 driveSimulation.getSimulatedDriveTrainPose().getRotation(),
                                 Meters.of(0.413),
                                 MetersPerSecond.of(10),
-                                Degrees.of(((m_Neck.getNeckAngle() * 180) / (Math.PI))
-                                        + 59.6))); // ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6
+                                Degrees.of((((m_Neck.getNeckAngle() * 180) / (Math.PI)) + 59.6) % 360)));
+                // TODO: ((m_Neck.getNeckAngle() * 180) / (Math.PI)) - 59.6 and when it equals < 0 set it to the Abs
+                // value and when its > 0 set it to 360 minus the value because it can't handle negative numbers
             })));
             // * create note on field
             pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
