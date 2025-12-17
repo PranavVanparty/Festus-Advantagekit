@@ -34,12 +34,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeNote;
 import frc.robot.commands.ShootNote;
 import frc.robot.subsystems.Intake;
+import frc.robot.commands.MoveNeck;
 import frc.robot.subsystems.Neck;
 import frc.robot.subsystems.Outtake;
 import frc.robot.subsystems.drive.Drive;
@@ -203,10 +205,12 @@ public class RobotContainer {
                             MetersPerSecond.of(1.5),
                             Degrees.of(-60)))));
         }
+
+        // m_Neck.setDefaultCommand(new RunCommand(() -> m_Neck.move(-gunner.getLeftY()), m_Neck));
         // what simon added starts here
         // Change to whileTrue after re-maping for climer
-        //         new JoystickButton(m_gunnerController, Button.kA.value)
-        //                 .onTrue(new ShootAMP(m_robotShooter, m_robotIntake, m_Neck));
+        new Trigger(() -> m_gunnerController.getLeftY() != 0)
+                .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getLeftY()));
 
         //         new JoystickButton(m_gunnerController, Button.kX.value)
         //                 // .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
