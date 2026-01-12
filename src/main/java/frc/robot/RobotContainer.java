@@ -16,10 +16,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
-import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.MathUtil;
@@ -30,17 +26,17 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FaceAprilTag;
+import frc.robot.commands.neckCommands.MoveNeck;
 import frc.robot.commands.neckCommands.NeckRaiseAndShoot;
 import frc.robot.commands.neckCommands.NeckStable;
 import frc.robot.subsystems.RangeFinder;
@@ -60,7 +56,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.GCLimelight;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -133,12 +128,13 @@ public class RobotContainer {
                         new ModuleIOSim(driveSimulation.getModules()[3]),
                         driveSimulation::setSimulationWorldPose);
 
-                vision = new Vision(
-                        drive,
-                        new VisionIOPhotonVisionSim(
-                                camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-                        new VisionIOPhotonVisionSim(
-                                camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                // vision = new Vision(
+                //         drive,
+                //         new VisionIOPhotonVisionSim(
+                //                 camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                //         new VisionIOPhotonVisionSim(
+                //                 camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                vision = new Vision(drive, new VisionIO() {}, new VisionIO() {});
 
                 m_Neck = new Neck(new NeckIOSim());
                 break;
@@ -222,22 +218,29 @@ public class RobotContainer {
             // * create note on field
             pranav.R1().onTrue(Commands.runOnce(() -> SimulatedArena.getInstance()
                     .addGamePiece(new CrescendoNoteOnField(new Translation2d(3, 3)))));
+
+            pranav.triangle().whileTrue(Commands.run(() -> m_Neck.move(1)));
+            pranav.circle().whileTrue(Commands.run(() -> m_Neck.move(-1)));
+            // Test the neck raise to range
+            pranav.square().onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
+
+            // Test the limelight face april tag code
+            pranav.cross().whileTrue(new FaceAprilTag(m_Vision, drive));
+            new Trigger(() -> MathUtil.applyDeadband(pranav.getLeftY(), 0.3) > 0)
+                    .whileTrue(new MoveNeck(m_Neck, () -> -pranav.getLeftY()));
         }
 
         // Change to whileTrue after re-maping for climer
-        // new Trigger(() -> pranav.getRightY() != 0).whileTrue(new MoveNeck(m_Neck, () ->
-        // -m_gunnerController.getRightY()));
+        new Trigger(() -> pranav.getRightY() != 0)
+                .whileTrue(new MoveNeck(m_Neck, () -> -m_gunnerController.getRightY()));
 
         // Test the neck raise to range
-        new JoystickButton(m_gunnerController, Button.kX.value)
+        new JoystickButton(m_gunnerController, XboxController.Button.kX.value)
                 .onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
 
         // Test the limelight face april tag code
-        new JoystickButton(m_driverController, Button.kA.value).whileTrue(new FaceAprilTag(m_Vision, drive));
-
-        // * PRANAV's Controller Bindings for Neck and Vision Testing
-        // new Trigger(() -> Math.abs(pranav.getLeftY()) > 0.1).whileTrue(new MoveNeck(m_Neck, () ->
-        // -pranav.getLeftY()));
+        new JoystickButton(m_driverController, XboxController.Button.kA.value)
+                .whileTrue(new FaceAprilTag(m_Vision, drive));
 
         // new Trigger(() -> Math.abs(MathUtil.applyDeadband(pranav.getLeftY(), 0.1)) > 0.0)
         //         .whileTrue(
@@ -246,15 +249,6 @@ public class RobotContainer {
         //                 new MoveNeck(m_Neck, () -> -MathUtil.applyDeadband(pranav.getLeftY(), 0.1))
         //         )
         //         );
-
-        pranav.triangle().whileTrue(Commands.run(() -> m_Neck.move(1)));
-        pranav.circle().whileTrue(Commands.run(() -> m_Neck.move(-1)));
-        pranav.share().whileTrue(new RunCommand(() -> System.out.println(".()")));
-        // Test the neck raise to range
-        pranav.square().onTrue(new NeckRaiseAndShoot(m_Neck, m_Vision, m_Range));
-
-        // Test the limelight face april tag code
-        pranav.cross().whileTrue(new FaceAprilTag(m_Vision, drive));
 
         //  .onTrue(new NeckRaiseAndShoot(m_Neck, 0.0887+0.004, m_robotShooter, m_robotIntake));
         // .onTrue(new NeckRaiseAndShoot(m_Neck, m_robotShooter, m_robotIntake, m_noteVision));

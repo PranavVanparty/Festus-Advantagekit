@@ -2,21 +2,26 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.commands.rangeCommands;
+package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.intake.Intake;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class FindDistanceShootValues extends Command {
-    /** Creates a new FindDistanceShootValues. */
-    public FindDistanceShootValues() {}
+public class IntakeNote extends Command {
+    private final Intake m_IntakeSystem;
+
+    /** Creates a new IntakeNote. */
+    public IntakeNote(Intake intake) {
+        // Use addRequirements() here to declare subsystem dependencies.
+        m_IntakeSystem = intake;
+        addRequirements(m_IntakeSystem);
+    }
 
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-        SmartDashboard.getNumber("targetDistance", 0);
-        SmartDashboard.getNumber("apriltagAngle", 0);
+        m_IntakeSystem.setPickupSpeed(0.6);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -25,11 +30,13 @@ public class FindDistanceShootValues extends Command {
 
     // Called once the command ends or is interrupted.
     @Override
-    public void end(boolean interrupted) {}
+    public void end(boolean interrupted) {
+        m_IntakeSystem.stop();
+    }
 
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
-        return false;
+        return m_IntakeSystem.NoteIsPresent();
     }
 }

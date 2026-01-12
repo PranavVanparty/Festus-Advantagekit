@@ -4,10 +4,6 @@
 // EDIT PORTS; create code!
 package frc.robot.subsystems.neck;
 
-import java.util.Map;
-
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -16,6 +12,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.encoder.EncoderIO;
+import java.util.Map;
+import org.littletonrobotics.junction.Logger;
 
 public class Neck extends SubsystemBase {
     /** Creates a new Neck. */

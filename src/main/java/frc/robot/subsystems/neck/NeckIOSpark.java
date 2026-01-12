@@ -47,7 +47,6 @@ public class NeckIOSpark implements NeckIO {
 
     @Override
     public double getNeckAngle() {
-
         return m_neckEncoder.getPosition();
     }
 

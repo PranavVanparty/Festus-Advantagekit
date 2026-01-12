@@ -13,10 +13,15 @@
 
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.math.util.Units.degreesToRadians;
 import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -28,6 +33,9 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 
     private final Supplier<Pose2d> poseSupplier;
     private final PhotonCameraSim cameraSim;
+
+    // Guard against repeated native crashes (OpenCV TLS container issue).
+    private static final AtomicBoolean visionSimHealthy = new AtomicBoolean(true);
 
     /**
      * Creates a new VisionIOPhotonVisionSim.
@@ -47,13 +55,28 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 
         // Add sim camera
         var cameraProperties = new SimCameraProperties();
+        // Keep sim workload reasonable + consistent on macOS.
+        cameraProperties.setFPS(30);
+        cameraProperties.setCalibration(640, 480, new Rotation2d(degreesToRadians(70)));
         cameraSim = new PhotonCameraSim(camera, cameraProperties);
         visionSim.addCamera(cameraSim, robotToCamera);
     }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
-        visionSim.update(poseSupplier.get());
+        // PhotonVision sim is only valid in sim; also avoid crashing robot code if OpenCV explodes.
+        if (RobotBase.isSimulation() && visionSimHealthy.get()) {
+            try {
+                visionSim.update(poseSupplier.get());
+            } catch (Throwable t) {
+                visionSimHealthy.set(false);
+                DriverStation.reportError(
+                        "PhotonVision VisionSystemSim crashed (disabling vision sim to prevent robot crash).",
+                        t.getStackTrace());
+            }
+        }
+
+        // Still populate whatever PhotonVision can provide (or empty if sim disabled)
         super.updateInputs(inputs);
     }
 }
